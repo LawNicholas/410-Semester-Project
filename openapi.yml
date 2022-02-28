@@ -1,0 +1,359 @@
+openapi: 3.0.3
+info:
+  title: Web Maze API
+  version: 1.0.0
+paths:
+  /accounts:
+    x-controller: accounts
+    post:
+      x-operation: createAccount
+      tags:
+        - Accounts
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+            example:
+              username: SimpleUser01
+              email: example@email.com
+              password: 123security!
+      responses:
+        201:
+          description: Account created
+          content:
+            text/plain:
+              schema:
+                type: string
+        400:
+          description: Bad request
+        409:
+          description: Account already exists
+  /accounts/{userId}: 
+    x-controller: accounts
+    parameters:
+      - $ref: '#/components/parameters/PathUserId'
+    get:
+      x-operation: getAccount
+      tags:
+        - Accounts
+      summary: Retrieve account details
+      responses:
+        200:
+          description: Account information retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - username
+                  - dateRegistered
+                  - pagesCompleted
+                  - progress
+                  - checkpoints
+                  - dateCompleted
+                  - timeTaken
+                  - leaderBoard
+                  - tools
+                properties:
+                  username:
+                    type: string
+                  dateRegistered:
+                    type: string
+                    format: date-time
+                  pagesCompleted:
+                    type: integer
+                  progress:
+                    type: integer
+                  checkpoints:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Checkpoint'
+                  dateCompleted:
+                    type: string
+                    format: date-time
+                  timeTaken:
+                    type: string
+                  leaderBoard:
+                    type: integer
+                  tools:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ToolId'
+        401:
+          description: Not authenticated
+        403:
+          description: Access denied
+        404:
+          description: Account not found
+    put:
+      x-operation: updateAccount
+      tags:
+        - Accounts
+      summary: Update account info
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - progress
+              properties:
+                progress:
+                  type: number
+            example:
+              progress: 0.5
+      responses:
+        200:
+          description: Account information updated
+        400:
+          description: Bad request
+        401:
+          description: Not authenticated
+        403:
+          description: Access denied
+        404:
+          description: Account not found
+    delete:
+      x-operation: deleteAccount
+      tags:
+        - Accounts
+      summary: Delete an account
+      responses:
+        204:
+          description: Account deleted
+        401:
+          description: Not authenticated
+        403:
+          description: Access denied
+  /accounts/{userId}/login:
+    x-controller: account
+    parameters:
+      - $ref: '#/components/parameters/PathUserId'
+    put:
+      x-operation: login
+      tags:
+        - Accounts
+      summary: Log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+            example:
+              email: example@email.com
+              password: 123security!
+      responses:
+        200:
+          description: Authenticated
+        400:
+          description: Bad request
+        403:
+          description: Access denied
+  /accounts/{userId}/logout:
+    x-controller: logout
+    parameters:
+      - $ref: '#/components/parameters/PathUserId'
+    put:
+      x-operation: logout
+      tags:
+        - Accounts
+      summary: Log out
+      responses:
+        200:
+          description: Logged out
+        403:
+          description: Access denied
+  /accounts/{userId}/tools/{toolId}:
+    x-controller: tool
+    parameters:
+      - $ref: '#/components/parameters/PathUserId'
+      - $ref: '#/components/parameters/PathToolId'
+    put:
+      x-operation: addTool
+      tags:
+        - Tools
+      summary: Add a tool to user's account
+      responses:
+        200:
+          description: Tool added to account
+        400:
+          description: Bad request
+        401:
+          description: Not authenticated
+        403:
+          description: Access denied
+  /tools/{toolId}:
+    x-controller: tool
+    parameters:
+      - $ref: '#/components/parameters/PathToolId'
+    get:
+      x-operation: getTool
+      tags:
+        - Tools
+      summary: Get tool information
+      responses:
+        200:
+          description: Tools retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tool'
+        400:
+          description: Bad request
+        404:
+          description: Tool not found
+  /leaderboard:
+    x-controller: finalPage
+    get:
+      x-operation: getLeaderboard
+      tags:
+        - Final Page
+      summary: Get leaderboard list
+      responses:
+        200:
+          description: Success
+          content:
+            appication/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Record'
+        400:
+          description: Bad request
+        401:
+          description: Not authenticated
+        403:
+          description: Access denied
+  /groupchat:
+    x-controller: finalPage
+    get:
+      x-operation: getGroupChat
+      tags:
+        - Final Page
+      summary: Get group chat entries
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chat'
+        400:
+          description: Bad request
+        401:
+          description: Not authenticated
+        403:
+          description: Access denied
+    put:
+      x-operation: addGroupChat
+      tags:
+        - Final Page
+      summary: Submit group chat message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Chat'
+      responses:
+        200:
+          description: Message added
+        400:
+          description: Bad request
+        401:
+          description: Not authenticated
+        403:
+          description: Access denied
+components:
+  parameters:
+    PathUserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+    PathToolId:
+      name: toolId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    Checkpoint:
+      type: string
+      format: date-time
+    Tool:
+      type: object
+      required:
+        - toolName
+        - mouseOver
+        - icon
+      properties:
+        toolName:
+          type: string
+        mouseOver:
+          type: string
+        icon:
+          type: string
+          format: binary
+    ToolId:
+      type: integer
+    Record:
+      type: object
+      properties:
+        username:
+          type: string
+        dateRegistered:
+          type: string
+          format: date-time
+        checkpoints:
+          type: array
+          items:
+            type: string
+            format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
+        leaderboard:
+          type: integer
+    Chat:
+      type: object
+      required:
+        - username
+        - message
+      properties:
+        username:
+          type: string
+        message:
+          type: string
+      example:
+        username: simpleUser01
+        message: Looks like I'm first!
