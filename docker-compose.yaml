@@ -1,0 +1,18 @@
+# Use postgres/example user/password credentials
+version: '3.1'
+
+services:
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+
+  db:
+    build:
+      context: ./docker/db
+    restart: always
+    env_file:
+      - ./.env
+    ports:
+      - ${POSTGRES_PORT}:5432

@@ -1,7 +1,35 @@
+require('dotenv').config()
+
 const Enforcer = require('openapi-enforcer')
 const EnforcerMiddleware = require('openapi-enforcer-middleware')
 const express = require('express')
+const { Pool } = require('pg')
 const path = require('path')
+
+const Accounts = require('./controllers/account')
+const Tools = require('./controllers/tool')
+const finalPage = require('./controllers/finalpage')
+
+
+// set up database connection
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST,
+  database: process.env.POSTGRES_DB,
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  port: +process.env.POSTGRES_PORT
+})
+
+// test that we can connect to the database
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error(err)
+    process.exit(1)
+  }
+  else {
+    console.log('Database connected')
+  }
+})
 
 const app = express()
 
@@ -25,6 +53,12 @@ enforcerMiddleware.on('error', err => {
   console.error(err)
   process.exit(1)
 })
+
+app.use(enforcerMiddleware.route({
+  accounts: Accounts(pool),
+  tools: Tools(pool),
+  finalPage: finalPage(pool)
+}))
 
 // add fallback mocking middleware here
 app.use(enforcerMiddleware.mock())

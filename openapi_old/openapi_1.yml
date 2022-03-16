@@ -61,36 +61,32 @@ paths:
                 type: object
                 required:
                   - username
-                  - email
-                  - progress
-                  - dateStarted
+                  - dateRegistered
                   - pagesCompleted
+                  - progress
                   - checkpoints
                   - dateCompleted
-                  - fastestTime
+                  - timeTaken
                   - leaderBoard
                   - tools
                 properties:
                   username:
                     type: string
-                  email:
-                    type: string
-                    format: email
-                  progress:
-                    type: integer
-                  dateStarted:
-                    type: string
-                    format: date-time
-                  dateCompleted:
+                  dateRegistered:
                     type: string
                     format: date-time
                   pagesCompleted:
+                    type: integer
+                  progress:
                     type: integer
                   checkpoints:
                     type: array
                     items:
                       $ref: '#/components/schemas/Checkpoint'
-                  fastestTime:
+                  dateCompleted:
+                    type: string
+                    format: date-time
+                  timeTaken:
                     type: string
                   leaderBoard:
                     type: integer
@@ -115,17 +111,13 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - progress
               properties:
-                email:
-                  type: string
-                username:
-                  type: string
-                password:
-                  type: string
+                progress:
+                  type: number
             example:
-              email: example@email.com
-              username: SimpleUser01
-              password: 123Security!
+              progress: 0.5
       responses:
         200:
           description: Account information updated
@@ -150,7 +142,7 @@ paths:
         403:
           description: Access denied
   /accounts/{userId}/login:
-    x-controller: accounts
+    x-controller: account
     parameters:
       - $ref: '#/components/parameters/PathUserId'
     put:
@@ -184,7 +176,7 @@ paths:
         403:
           description: Access denied
   /accounts/{userId}/logout:
-    x-controller: accounts
+    x-controller: logout
     parameters:
       - $ref: '#/components/parameters/PathUserId'
     put:
@@ -198,7 +190,7 @@ paths:
         403:
           description: Access denied
   /accounts/{userId}/tools/{toolId}:
-    x-controller: tools
+    x-controller: tool
     parameters:
       - $ref: '#/components/parameters/PathUserId'
       - $ref: '#/components/parameters/PathToolId'
@@ -217,7 +209,7 @@ paths:
         403:
           description: Access denied
   /tools/{toolId}:
-    x-controller: tools
+    x-controller: tool
     parameters:
       - $ref: '#/components/parameters/PathToolId'
     get:
@@ -339,7 +331,7 @@ components:
       properties:
         username:
           type: string
-        dateStarted:
+        dateRegistered:
           type: string
           format: date-time
         checkpoints:
