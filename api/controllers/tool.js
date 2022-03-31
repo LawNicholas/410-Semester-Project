@@ -1,4 +1,4 @@
-const accounts = require('../database/tool')
+const Tools = require('../database/tool')
 
 module.exports = function (dbClient) {
     return {

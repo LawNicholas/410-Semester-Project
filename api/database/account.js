@@ -1,15 +1,16 @@
 const bcrypt = require('bcryptjs')
+const { text } = require('express')
 const uuid = require('uuid').v4
 
 exports.createAccount = async function (client, username, email, password) {
-    registryDate = new Date()
+    registryDate = new Date().toUTCString()
 
-    const userId = uuid()
+    const userid = uuid()
     const { rowCount } = await client.query({
         name: 'create-account',
-        text: 'INSERT INTO accounts (userId, username, email, password, progress, datestarted, datecompleted, pagescompleted, fastesttime, leaderboard) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT DO NOTHING',
+        text: 'INSERT INTO accounts (userid, username, email, password, progress, datestarted, datecompleted, pagescompleted, fastesttime, leaderboard) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT DO NOTHING',
         values: [
-            userId,
+            userid,
             username,
             email,
             await encryptPassword(password),
@@ -21,29 +22,113 @@ exports.createAccount = async function (client, username, email, password) {
             null
         ]
     })
-    return rowCount > 0 ? userId : undefined
+    return rowCount > 0 ? userid : undefined
 }
 
-exports.getAccount = async function (client, userId) {
+exports.getAccount = async function (client, userid) {
     const { rows } = await client.query({
         name: 'get-account-by-id',
-        text: 'SELECT * FROM accounts WHERE userId=$1',
-        values: [userId]
+        text: 'SELECT * FROM accounts WHERE userid=$1',
+        values: [userid]
     })
     return rows[0]
 }
 
-exports.updateAccount = async function (client, userId, data) {
+exports.getAccountByUsername = async function (client, username) {
+    
+    const { rows } = await client.query({
+        name: 'get-account-by-username',
+        text: 'SELECT * FROM accounts WHERE username=$1',
+        values: [username]
+    })
+
+    if (rows[0] === undefined){
+        return rows[0]
+    }
+
+    const { rows:toolIds } = await client.query({
+        name: 'get-tool-ids-by-user-id',
+        text: 'SELECT toolid FROM account_toolids WHERE userid=$1',
+        values: [await rows[0].userid]
+    })
+
+    let tls = []
+
+    if (toolIds.length > 0) {
+        let i = 0
+        let queryText = ''
+        const values = []
+        while (i < toolIds.length) {
+            queryText += 'toolid=$' + (i + 1)
+            if (i + 1 < toolIds.length) {
+                queryText += ' OR '
+            }
+            values.push(toolIds[i].toolid)
+            i += 1
+        }
+
+        const { rows:tools } = await client.query({
+            name: 'get-tools',
+            text: 'SELECT toolname FROM tools WHERE ' + queryText,
+            values
+        })
+
+        tls = tools
+    }
+
+    const { rows:checkpoints } = await client.query({
+        name: 'get-checkpoints-by-id',
+        text: 'SELECT checkpoint FROM account_checkpoints WHERE userid=$1',
+        values: [await rows[0].userid]
+    })
+
+    i = 0
+    let cps = []
+    while (i < checkpoints.length) {
+        cps.push(checkpoints[i].checkpoint)
+        i += 1
+    }
+
+    i = 0
+    while (i < tls.length) {
+        tls[i] = tls[i].toolname
+        i += 1
+    }
+
+    let userData = rows[0]
+    userData['checkpoints'] = cps
+    userData['tools'] = tls
+
+    return userData
+}
+
+exports.updateAccount = async function (client, userid, data) {
     const { email, username, password } = data
     const values = []
     const sets = []
 
     if (email !== undefined) {
         values.push(email)
+        const { rows:account } = await client.query({
+            name: 'get-account-by-email',
+            text: 'SELECT * FROM accounts WHERE email=$1',
+            values: [email]
+        })
+        if (account.length > 0) {
+            return account
+        }
         sets.push('email=$' + values.length)
     }
 
     if (username !== undefined) {
+        const { rows:account } = await client.query({
+            name: 'get-account-by-username',
+            text: 'SELECT * FROM accounts WHERE username=$1',
+            values: [username]
+        })
+        if (account.length > 0) {
+            return account
+        }
         values.push(username)
         sets.push('username=$' + values.length)
     }
@@ -54,25 +139,51 @@ exports.updateAccount = async function (client, userId, data) {
     }
 
     // if no properties were passed in then there is nothing to update
-    if (values.length === 0) return await exports.getAccount(client, userId)
+    if (values.length === 0) return await exports.getAccount(client, userid)
 
-    values.push(userId)
+    values.push(userid)
 
     const { rows } = await client.query({
         name: 'update-account-by-id',
-        text: 'UPDATE accounts SET ' + sets.join(', ') + ' WHERE userId=$' + (values.length) + ' RETURNING *',
+        text: 'UPDATE accounts SET ' + sets.join(', ') + ' WHERE userid=$' + (values.length) + ' RETURNING *',
         values
     })
     return rows[0]
 }
 
-exports.deleteAccount = async function (client, userId) {
-    const { rows } = await client.query({
-        name: 'delete-account-by-id',
-        text: 'DELETE FROM accounts WHERE userId=$1',
-        values: [userId]
+exports.deleteAccount = async function (client, username) {
+    const { rows:account } = await client.query({
+        name: 'get-account-by-username',
+        text: 'SELECT * FROM accounts WHERE username=$1',
+        values: [username]
     })
-    return rows > 0
+    
+    if (account.length == 0) return false
+
+    await client.query({
+        name: 'delete-checkpoints-by-id',
+        text: 'DELETE FROM account_checkpoints WHERE userid=$1',
+        values: [account[0].userid]
+    })
+
+    await client.query({
+        name: 'delete-tools-by-userid',
+        text: 'DELETE FROM account_toolids WHERE userid=$1',
+        values: [account[0].userid]
+    })
+
+    await client.query({
+        name: 'delete-comments-by-userid',
+        text: 'DELETE FROM comments WHERE userid=$1',
+        values: [account[0].userid]
+    })
+
+    const { rowCount } = await client.query({
+        name: 'delete-account-by-id',
+        text: 'DELETE FROM accounts WHERE username=$1',
+        values: [username]
+    })
+    return rowCount > 0
 }
 
 async function encryptPassword (password) {

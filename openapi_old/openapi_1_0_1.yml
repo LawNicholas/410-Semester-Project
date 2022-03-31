@@ -1,30 +1,10 @@
 openapi: 3.0.3
 info:
   title: Web Maze API
-  version: 1.1.2
+  version: 1.0.1
 paths:
   /accounts:
     x-controller: accounts
-    get:
-      x-operation: getAccount
-      tags:
-        - Accounts
-      security:
-        - cookieAuth: []
-      summary: Retrieve account details
-      responses:
-        200:
-          description: Account information retrieved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Account'
-        401:
-          description: Not authenticated
-        403:
-          description: Access denied
-        404:
-          description: Account not found
     post:
       x-operation: createAccount
       tags:
@@ -63,38 +43,71 @@ paths:
           description: Bad request
         409:
           description: Account already exists
-  /accounts/{username}:
+  /accounts/{userId}: 
     x-controller: accounts
     parameters:
-      - $ref: '#/components/parameters/PathUsername'
+      - $ref: '#/components/parameters/PathUserId'
     get:
-      x-operation: getAccountByUsername
+      x-operation: getAccount
       tags:
         - Accounts
-      security:
-        - cookieAuth: []
-      summary: Retrieve account details based on a username
+      summary: Retrieve account details
       responses:
         200:
-          description: Account retrieved.
+          description: Account information retrieved
           content:
             application/json:
               schema:
-               $ref: '#/components/schemas/Account'
-        400:
-          description: Invalid request
+                type: object
+                required:
+                  - username
+                  - email
+                  - progress
+                  - dateStarted
+                  - pagesCompleted
+                  - checkpoints
+                  - dateCompleted
+                  - fastestTime
+                  - leaderBoard
+                  - tools
+                properties:
+                  username:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  progress:
+                    type: integer
+                  dateStarted:
+                    type: string
+                    format: date-time
+                  dateCompleted:
+                    type: string
+                    format: date-time
+                  pagesCompleted:
+                    type: integer
+                  checkpoints:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Checkpoint'
+                  fastestTime:
+                    type: string
+                  leaderBoard:
+                    type: integer
+                  tools:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ToolId'
         401:
-          description: Not authenticated.
+          description: Not authenticated
         403:
-          description: Access denied.
+          description: Access denied
         404:
-          description: Not found.
+          description: Account not found
     put:
       x-operation: updateAccount
       tags:
         - Accounts
-      security:
-        - cookieAuth: []
       summary: Update account info
       requestBody:
         required: true
@@ -128,8 +141,6 @@ paths:
       x-operation: deleteAccount
       tags:
         - Accounts
-      security:
-        - cookieAuth: []
       summary: Delete an account
       responses:
         204:
@@ -138,12 +149,14 @@ paths:
           description: Not authenticated
         403:
           description: Access denied
-  /authentication/login:
-    x-controller: authentication
+  /accounts/{userId}/login:
+    x-controller: accounts
+    parameters:
+      - $ref: '#/components/parameters/PathUserId'
     put:
       x-operation: login
       tags:
-        - Authentication
+        - Accounts
       summary: Log in
       requestBody:
         required: true
@@ -152,33 +165,38 @@ paths:
             schema:
               type: object
               required:
-                - username
+                - email
                 - password
               properties:
-                username:
+                email:
                   type: string
+                  format: email
                 password:
                   type: string
             example:
-              username: simpleUser01
+              email: example@email.com
               password: 123security!
       responses:
         200:
           description: Authenticated
         400:
           description: Bad request
-        401:
-          description: Not authenticated
-  /authentication/logout:
-    x-controller: authentication
+        403:
+          description: Access denied
+  /accounts/{userId}/logout:
+    x-controller: accounts
+    parameters:
+      - $ref: '#/components/parameters/PathUserId'
     put:
       x-operation: logout
       tags:
-        - Authentication
+        - Accounts
       summary: Log out
       responses:
         200:
           description: Logged out
+        403:
+          description: Access denied
   /accounts/{userId}/tools/{toolId}:
     x-controller: tools
     parameters:
@@ -290,62 +308,13 @@ components:
       required: true
       schema:
         type: string
-    PathUsername:
-      name: username
-      in: path
-      required: true
-      schema:
-        type: string
     PathToolId:
       name: toolId
       in: path
       required: true
       schema:
         type: string
-  securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: todoSessionId
   schemas:
-    Account:
-      type: object
-      required:
-        - username
-        - email
-        - progress
-        - dateStarted
-        - pagesCompleted
-        - checkpoints
-        - tools
-      properties:
-        username:
-          type: string
-        email:
-          type: string
-          format: email
-        progress:
-          type: integer
-        dateStarted:
-          type: string
-          format: date-time
-        dateCompleted:
-          type: string
-          format: date-time
-        pagesCompleted:
-          type: integer
-        checkpoints:
-          type: array
-          items:
-            $ref: '#/components/schemas/Checkpoint'
-        fastestTime:
-          type: string
-        leaderBoard:
-          type: integer
-        tools:
-          type: array
-          items:
-            $ref: '#/components/schemas/ToolName'
     Checkpoint:
       type: string
       format: date-time
@@ -365,8 +334,6 @@ components:
           format: binary
     ToolId:
       type: integer
-    ToolName:
-      type: string
     Record:
       type: object
       properties:

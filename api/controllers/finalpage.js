@@ -1,4 +1,4 @@
-const accounts = require('../database/finalpage')
+const FinalPage = require('../database/finalpage')
 
 module.exports = function (dbClient) {
     return {

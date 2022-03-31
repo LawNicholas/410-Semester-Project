@@ -1,4 +1,4 @@
-const accounts = require('../database/account')
+const Accounts = require('../database/account')
 
 module.exports = function (pool) {
     return {
@@ -8,12 +8,12 @@ module.exports = function (pool) {
 
 			try{
 				await client.query('BEGIN')
-				const userId = await accounts.createAccount(client, username, email, password)
-				if (userId) {
-					res.set('location', '/api/accounts/' + userId)
+				const userid = await Accounts.createAccount(client, username, email, password)
+				if (userid) {
+					res.set('location', '/api/accounts/' + userid)
 						.enforcer
 						.status(201)
-						.send("Account created with id: " + userId)
+						.send("Account created with id: " + userid)
 				}
 				else {
 					res.enforcer.status(409).send()
@@ -27,39 +27,79 @@ module.exports = function (pool) {
 			finally{
 				client.release()
 			}
-			/*
-			const userId = await accounts.createAccount(pool, username, email, password)
-			console.log(userId)
-			if (userId) {
-				res.set('location', '/api/accounts/' + userId)
-					.enforcer
-					.status(201)
-					.send()
-			}
-            else {
-				res.enforcer.status(409).send()
-			}
-			*/
 		},
         async getAccount(req, res) {
-
+			const user = req.user
+			res.enforcer.status(200).send({
+				username: user.username
+			})
         },
+		async getAccountByUsername(req, res) {
+			const { username } = req.enforcer.params
+			const client = await pool.connect()
+			const account = await Accounts.getAccountByUsername(client, username)
+			if (account === undefined || account.userid !== req.user.id) {
+				res.enforcer.status(403).send()
+			}
+			else {
+				if (account.datecompleted != null) {
+					res.enforcer.status(200).send({
+						username: account.username,
+						email: account.email,
+						progress: account.progress,
+						dateStarted: account.datestarted,
+						pagesCompleted: account.pagescompleted,
+						checkpoints: account.checkpoints,
+						dateCompleted: account.datecompleted,
+						fastestTime: account.fastestTime,
+						leaderBoard: account.leaderboard,
+						tools: account.tools
+					})
+				}
+				else if (account.fastestTime == null) {
+					res.enforcer.status(200).send({
+						username: account.username,
+						email: account.email,
+						progress: account.progress,
+						dateStarted: account.datestarted,
+						pagesCompleted: account.pagescompleted,
+						checkpoints: account.checkpoints,
+						tools: account.tools
+					})
+				}
+				else {
+					res.enforcer.status(200).send({
+						username: account.username,
+						email: account.email,
+						progress: account.progress,
+						dateStarted: account.datestarted,
+						pagesCompleted: account.pagescompleted,
+						checkpoints: account.checkpoints,
+						fastestTime: account.fastestTime,
+						leaderBoard: account.leaderboard,
+						tools: account.tools
+					})
+				}
+			}
+		},
         async updateAccount (req, res) {
 			const data = req.enforcer.body
-			const { userId } = req.enforcer.params
+			const { username } = req.enforcer.params
 			const client = await pool.connect()
 			try {
 				await client.query('BEGIN')
-				let account = await accounts.getAccount(client, userId)
+				let account = await Accounts.getAccountByUsername(client, username)
 				if (account === undefined) {
 					res.enforcer.status(404).send()
-				}/*
-				else if (account.account_id !== req.user.id) {
-					res.enforcer.status(403).send()
-				}*/
+				}
 				else {
-					await accounts.updateAccount(client, userId, data)
-					res.enforcer.status(200).send()
+					account = await Accounts.updateAccount(client, account.userid, data)
+					if (account.userid !== req.user.id) {
+						res.enforcer.status(403).send()
+					}
+					else {
+						res.enforcer.status(200).send()
+					}
 				}
 				await client.query('COMMIT')
 			}
@@ -72,20 +112,20 @@ module.exports = function (pool) {
 			}
         },
         async deleteAccount (req, res) {
-            const { userId } = req.enforcer.params
+            const { username } = req.enforcer.params
 
             const client = await pool.connect()
 			try {
 				await client.query('BEGIN')
-				let account = await accounts.getAccount(client, userId)
+				let account = await Accounts.getAccountByUsername(client, username)
 				if (account === undefined) {
 					res.enforcer.status(204).send()
-				}/*
-                else if (account.userId !== req.user.id) {
+				}
+				else if (account.userid !== req.user.id) {
 					res.enforcer.status(403).send()
-				}*/
+				}
                 else {
-					await accounts.deleteAccount(pool, userId)
+					await Accounts.deleteAccount(pool, username)
 					res.enforcer.status(204).send("Account Deleted")
 				}
 				await client.query('COMMIT')
