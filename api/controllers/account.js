@@ -30,9 +30,51 @@ module.exports = function (pool) {
 		},
         async getAccount(req, res) {
 			const user = req.user
-			res.enforcer.status(200).send({
-				username: user.username
-			})
+			const client = await pool.connect()
+			const account = await Accounts.getAccount(client, user.id)
+			if (account === undefined || account.userid !== req.user.id) {
+				res.enforcer.status(403).send()
+			}
+			else {
+				if (account.datecompleted != null) {
+					res.enforcer.status(200).send({
+						username: account.username,
+						email: account.email,
+						progress: account.progress,
+						dateStarted: account.datestarted,
+						pagesCompleted: account.pagescompleted,
+						checkpoints: account.checkpoints,
+						dateCompleted: account.datecompleted,
+						fastestTime: account.fastestTime,
+						leaderBoard: account.leaderboard,
+						tools: account.tools
+					})
+				}
+				else if (account.fastestTime == null) {
+					res.enforcer.status(200).send({
+						username: account.username,
+						email: account.email,
+						progress: account.progress,
+						dateStarted: account.datestarted,
+						pagesCompleted: account.pagescompleted,
+						checkpoints: account.checkpoints,
+						tools: account.tools
+					})
+				}
+				else {
+					res.enforcer.status(200).send({
+						username: account.username,
+						email: account.email,
+						progress: account.progress,
+						dateStarted: account.datestarted,
+						pagesCompleted: account.pagescompleted,
+						checkpoints: account.checkpoints,
+						fastestTime: account.fastestTime,
+						leaderBoard: account.leaderboard,
+						tools: account.tools
+					})
+				}
+			}
         },
 		async getAccountByUsername(req, res) {
 			const { username } = req.enforcer.params
@@ -137,12 +179,6 @@ module.exports = function (pool) {
             finally {
 				client.release()
 			}
-        },
-        async login(req, res){
-
-        },
-        async logout(req, res){
-
         }
     }
 }

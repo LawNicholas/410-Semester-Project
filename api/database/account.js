@@ -31,11 +31,14 @@ exports.getAccount = async function (client, userid) {
         text: 'SELECT * FROM accounts WHERE userid=$1',
         values: [userid]
     })
-    return rows[0]
+    if (rows[0] === undefined){
+        return rows[0]
+    }
+
+    return await combineUserData(client, rows[0])
 }
 
 exports.getAccountByUsername = async function (client, username) {
-    
     const { rows } = await client.query({
         name: 'get-account-by-username',
         text: 'SELECT * FROM accounts WHERE username=$1',
@@ -46,60 +49,7 @@ exports.getAccountByUsername = async function (client, username) {
         return rows[0]
     }
 
-    const { rows:toolIds } = await client.query({
-        name: 'get-tool-ids-by-user-id',
-        text: 'SELECT toolid FROM account_toolids WHERE userid=$1',
-        values: [await rows[0].userid]
-    })
-
-    let tls = []
-
-    if (toolIds.length > 0) {
-        let i = 0
-        let queryText = ''
-        const values = []
-        while (i < toolIds.length) {
-            queryText += 'toolid=$' + (i + 1)
-            if (i + 1 < toolIds.length) {
-                queryText += ' OR '
-            }
-            values.push(toolIds[i].toolid)
-            i += 1
-        }
-
-        const { rows:tools } = await client.query({
-            name: 'get-tools',
-            text: 'SELECT toolname FROM tools WHERE ' + queryText,
-            values
-        })
-
-        tls = tools
-    }
-
-    const { rows:checkpoints } = await client.query({
-        name: 'get-checkpoints-by-id',
-        text: 'SELECT checkpoint FROM account_checkpoints WHERE userid=$1',
-        values: [await rows[0].userid]
-    })
-
-    i = 0
-    let cps = []
-    while (i < checkpoints.length) {
-        cps.push(checkpoints[i].checkpoint)
-        i += 1
-    }
-
-    i = 0
-    while (i < tls.length) {
-        tls[i] = tls[i].toolname
-        i += 1
-    }
-
-    let userData = rows[0]
-    userData['checkpoints'] = cps
-    userData['tools'] = tls
-
-    return userData
+    return await combineUserData(client, rows[0])
 }
 
 exports.updateAccount = async function (client, userid, data) {
@@ -189,4 +139,61 @@ exports.deleteAccount = async function (client, username) {
 async function encryptPassword (password) {
     const salt = await bcrypt.genSalt(10)
     return await bcrypt.hash(password, salt)
+}
+
+async function combineUserData (client, user) {
+    const { rows:toolIds } = await client.query({
+        name: 'get-tool-ids-by-user-id',
+        text: 'SELECT toolid FROM account_toolids WHERE userid=$1',
+        values: [await user.userid]
+    })
+
+    let tls = []
+
+    if (toolIds.length > 0) {
+        let i = 0
+        let queryText = ''
+        const values = []
+        while (i < toolIds.length) {
+            queryText += 'toolid=$' + (i + 1)
+            if (i + 1 < toolIds.length) {
+                queryText += ' OR '
+            }
+            values.push(toolIds[i].toolid)
+            i += 1
+        }
+
+        const { rows:tools } = await client.query({
+            name: 'get-tools',
+            text: 'SELECT toolname FROM tools WHERE ' + queryText,
+            values
+        })
+
+        tls = tools
+    }
+
+    const { rows:checkpoints } = await client.query({
+        name: 'get-checkpoints-by-id',
+        text: 'SELECT checkpoint FROM account_checkpoints WHERE userid=$1',
+        values: [await user.userid]
+    })
+
+    i = 0
+    let cps = []
+    while (i < checkpoints.length) {
+        cps.push(checkpoints[i].checkpoint)
+        i += 1
+    }
+
+    i = 0
+    while (i < tls.length) {
+        tls[i] = tls[i].toolname
+        i += 1
+    }
+
+    let userData = user
+    userData['checkpoints'] = cps
+    userData['tools'] = tls
+
+    return userData
 }
