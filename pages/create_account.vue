@@ -10,8 +10,9 @@
     </template>
     <template v-else>
         <div>
-            <h1>Login</h1>
-            <form @submit.prevent="login()">
+            <h1>Create Account</h1>
+            <form @submit.prevent="createAccount()">
+                <v-text-field label="Email" v-model="email"></v-text-field>
                 <v-text-field label="Username" v-model="username"></v-text-field>
                 <v-text-field label="Password" type="password" v-model="password"></v-text-field>
                 <sub>{{errorMessage}}</sub>
@@ -26,30 +27,39 @@
 
 <script>
 export default {
-  name: 'LogInPage',
+  name: 'CreateAccountPage',
   data () {
     const user = this.$store.state.accounts.user
     return user === null
       ? {
         username: '',
+        email: '',
         password: '',
         errorMessage: '',
       }
       : {
         username: user.username,
+        email: '',
         password: '',
         errorMessage: ''
       }
   },
   methods: {
-    async login () {
+    async createAccount () {
       if (this.readyToSubmit) {
-        const success = await this.$store.dispatch('accounts/login', {
+        const status = await this.$store.dispatch('accounts/createAccount', {
           username: this.username,
+          email: this.email,
           password: this.password
         })
-        if (success === false) {
-            this.errorMessage = 'Username or password was incorrect.'
+        if (status !== 'created') {
+            this.errorMessage = 'Username or email already exists.'
+        }
+        else {
+            this.errorMessage = ''
+            this.username = ''
+            this.email = ''
+            this.password = ''
         }
       }
     },
@@ -62,7 +72,7 @@ export default {
   },
   computed: {
     readyToSubmit () {
-      return this.username !== '' && this.password !== ''
+      return this.username !== '' && this.email !== '' && this.password !== ''
     }
   }
 }

@@ -3,12 +3,12 @@ const { text } = require('express')
 const uuid = require('uuid').v4
 
 exports.createAccount = async function (client, username, email, password) {
-    registryDate = new Date().toUTCString()
+    let registryDate = new Date().toUTCString()
 
     const userid = uuid()
     const { rowCount } = await client.query({
         name: 'create-account',
-        text: 'INSERT INTO accounts (userid, username, email, password, progress, datestarted, datecompleted, pagescompleted, fastesttime, leaderboard) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT DO NOTHING',
+        text: 'INSERT INTO accounts (userid, username, email, password, progress, datestarted, datecompleted, pagescompleted, fastesttime_dd, fastesttime_hh, fastesttime_mm, fastesttime_ss) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ON CONFLICT DO NOTHING',
         values: [
             userid,
             username,
@@ -18,6 +18,8 @@ exports.createAccount = async function (client, username, email, password) {
             registryDate,
             null,
             0,
+            null,
+            null,
             null,
             null
         ]
@@ -53,12 +55,11 @@ exports.getAccountByUsername = async function (client, username) {
 }
 
 exports.updateAccount = async function (client, userid, data) {
-    const { email, username, password } = data
+    const { email, username, password, progress, datestarted, datecompleted, fastesttime_dd, fastesttime_hh, fastesttime_mm, fastesttime_ss } = data
     const values = []
     const sets = []
 
     if (email !== undefined) {
-        values.push(email)
         const { rows:account } = await client.query({
             name: 'get-account-by-email',
             text: 'SELECT * FROM accounts WHERE email=$1',
@@ -67,6 +68,7 @@ exports.updateAccount = async function (client, userid, data) {
         if (account.length > 0) {
             return account
         }
+        values.push(email)
         sets.push('email=$' + values.length)
     }
 
@@ -86,6 +88,77 @@ exports.updateAccount = async function (client, userid, data) {
     if (password !== undefined) {
         values.push(await encryptPassword(password))
         sets.push('password=$' + values.length)
+    }
+
+    if (progress !== undefined) {
+        values.push(progress)
+        sets.push('progress=$' + values.length)
+    }
+
+    if (datestarted !== undefined) {
+        values.push(datestarted)
+        sets.push('datestarted=$' + values.length)
+    }
+
+    if (datecompleted !== undefined) {
+        if (datecompleted !== '') {
+            values.push(datecompleted)
+            sets.push('datecompleted=$' + values.length)
+    
+            const { rows } = await client.query({
+                name: 'get-fastest-time',
+                text: 'SELECT datestarted, fastesttime_dd, fastesttime_hh, fastesttime_mm, fastesttime_ss FROM accounts WHERE userid=$1',
+                values: [userid]
+            })
+            if(rows[0].fastesttime_dd !== null) {
+                const fastesttime = ((rows[0].fastesttime_dd * 24 * 60 * 60) + (rows[0].fastesttime_hh * 60 * 60) + (rows[0].fastesttime_mm * 60) + rows[0].fastesttime_ss)
+    
+                const date1 = new Date(rows[0].datestarted)
+                const date2 = new Date(datecompleted)
+                const diffTime = Math.abs(date2 - date1)
+    
+                if (Math.ceil(diffTime / 1000) < fastesttime) {
+                    values.push(Math.floor(diffTime / (1000 * 60 * 60 * 24)))
+                    sets.push('fastesttime_dd=$' + values.length)
+                    values.push(Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)))
+                    sets.push('fastesttime_hh=$' + values.length)
+                    values.push(Math.floor(((diffTime % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) / (1000 * 60)))
+                    sets.push('fastesttime_mm=$' + values.length)
+                    values.push(Math.floor((((diffTime % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) / (1000 * 60)) / (1000)))
+                    sets.push('fastesttime_ss=$' + values.length)
+                }
+                
+            }
+            else {
+                const date1 = new Date(rows[0].datestarted)
+                const date2 = new Date(datecompleted)
+                const diffTime = Math.abs(date2 - date1)
+                values.push(Math.floor(diffTime / (1000 * 60 * 60 * 24)))
+                sets.push('fastesttime_dd=$' + values.length)
+                values.push(Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)))
+                sets.push('fastesttime_hh=$' + values.length)
+                values.push(Math.floor(((diffTime % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) / (1000 * 60)))
+                sets.push('fastesttime_mm=$' + values.length)
+                values.push(Math.floor((((diffTime % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) % (1000 * 60)) / (1000)))
+                sets.push('fastesttime_ss=$' + values.length)
+            }
+        }
+        else {
+            values.push(null)
+            sets.push('datecompleted=$' + values.length)
+        }
+        
+    }
+
+    if (fastesttime_dd !== undefined && fastesttime_hh !== undefined && fastesttime_mm !== undefined && fastesttime_ss !== undefined) {
+        values.push(fastesttime_dd)
+        sets.push('fastesttime_dd=$' + values.length)
+        values.push(fastesttime_hh)
+        sets.push('fastesttime_hh=$' + values.length)
+        values.push(fastesttime_mm)
+        sets.push('fastesttime_mm=$' + values.length)
+        values.push(fastesttime_ss)
+        sets.push('fastesttime_ss=$' + values.length)
     }
 
     // if no properties were passed in then there is nothing to update

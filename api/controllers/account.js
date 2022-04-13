@@ -41,22 +41,24 @@ module.exports = function (pool) {
 						username: account.username,
 						email: account.email,
 						progress: account.progress,
-						dateStarted: account.datestarted,
-						pagesCompleted: account.pagescompleted,
+						datestarted: account.datestarted,
+						pagescompleted: account.pagescompleted,
 						checkpoints: account.checkpoints,
-						dateCompleted: account.datecompleted,
-						fastestTime: account.fastestTime,
-						leaderBoard: account.leaderboard,
+						datecompleted: account.datecompleted,
+						fastesttimedd: account.fastesttime_dd,
+						fastesttimehh: account.fastesttime_hh,
+						fastesttimemm: account.fastesttime_mm,
+						fastesttimess: account.fastesttime_ss,
 						tools: account.tools
 					})
 				}
-				else if (account.fastestTime == null) {
+				else if (account.fastesttime_dd == null) {
 					res.enforcer.status(200).send({
 						username: account.username,
 						email: account.email,
 						progress: account.progress,
-						dateStarted: account.datestarted,
-						pagesCompleted: account.pagescompleted,
+						datestarted: account.datestarted,
+						pagescompleted: account.pagescompleted,
 						checkpoints: account.checkpoints,
 						tools: account.tools
 					})
@@ -66,11 +68,13 @@ module.exports = function (pool) {
 						username: account.username,
 						email: account.email,
 						progress: account.progress,
-						dateStarted: account.datestarted,
-						pagesCompleted: account.pagescompleted,
+						datestarted: account.datestarted,
+						pagescompleted: account.pagescompleted,
 						checkpoints: account.checkpoints,
-						fastestTime: account.fastestTime,
-						leaderBoard: account.leaderboard,
+						fastesttimedd: account.fastesttime_dd,
+						fastesttimehh: account.fastesttime_hh,
+						fastesttimemm: account.fastesttime_mm,
+						fastesttimess: account.fastesttime_ss,
 						tools: account.tools
 					})
 				}
@@ -89,22 +93,24 @@ module.exports = function (pool) {
 						username: account.username,
 						email: account.email,
 						progress: account.progress,
-						dateStarted: account.datestarted,
-						pagesCompleted: account.pagescompleted,
+						datestarted: account.datestarted,
+						pagescompleted: account.pagescompleted,
 						checkpoints: account.checkpoints,
-						dateCompleted: account.datecompleted,
-						fastestTime: account.fastestTime,
-						leaderBoard: account.leaderboard,
+						datecompleted: account.datecompleted,
+						fastesttimedd: account.fastesttime_dd,
+						fastesttimehh: account.fastesttime_hh,
+						fastesttimemm: account.fastesttime_mm,
+						fastesttimess: account.fastesttime_ss,
 						tools: account.tools
 					})
 				}
-				else if (account.fastestTime == null) {
+				else if (account.fastesttime_dd == null) {
 					res.enforcer.status(200).send({
 						username: account.username,
 						email: account.email,
 						progress: account.progress,
-						dateStarted: account.datestarted,
-						pagesCompleted: account.pagescompleted,
+						datestarted: account.datestarted,
+						pagescompleted: account.pagescompleted,
 						checkpoints: account.checkpoints,
 						tools: account.tools
 					})
@@ -114,11 +120,13 @@ module.exports = function (pool) {
 						username: account.username,
 						email: account.email,
 						progress: account.progress,
-						dateStarted: account.datestarted,
-						pagesCompleted: account.pagescompleted,
+						datestarted: account.datestarted,
+						pagescompleted: account.pagescompleted,
 						checkpoints: account.checkpoints,
-						fastestTime: account.fastestTime,
-						leaderBoard: account.leaderboard,
+						fastesttimedd: account.fastesttime_dd,
+						fastesttimehh: account.fastesttime_hh,
+						fastesttimemm: account.fastesttime_mm,
+						fastesttimess: account.fastesttime_ss,
 						tools: account.tools
 					})
 				}

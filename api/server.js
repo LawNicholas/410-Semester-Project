@@ -54,7 +54,7 @@ passport.use(new LocalStrategy((username, password, done) => {
         const match = await bcrypt.compare(password, account.password)
         if (match) {
           // passwords matched, so create the user object
-          done(null, { id: account.userid, username: account.username, name: account.email })
+          done(null, { id: account.userid, username: account.username, email: account.email })
         } else {
           const hash = await bcrypt.hash(password, 10)
           const m2 = await bcrypt.compare(password, hash)

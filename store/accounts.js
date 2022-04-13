@@ -54,6 +54,65 @@ export const actions = {
         }
     },
 
+    async updateAccount ({ dispatch }, { username, email, password, progress, datestarted, datecompleted, pagescompleted }) {
+        try {
+            let query = []
+            if (username !== null) {
+                query['username'] = username
+            }
+            if (email !== null) {
+                query['email'] = email
+            }
+            if (password !== null) {
+                query['password'] = password
+            }
+            if (progress !== null) {
+                query['progress'] = progress
+            }
+            if (pdatestarted !== null) {
+                query['datestarted'] = datestarted
+            }
+            if (datecompleted !== null) {
+                query['datecompleted'] = datecompleted
+            }
+            if (pagescompleted !== null) {
+                query['pagescompleted'] = pagescompleted
+            }
+            const res = await this.$axios.put('/api/accounts', query)
+            if (res.status === 200) {
+                await dispatch('load')
+                return true
+            }
+            else {
+                return false
+            }
+        }
+        catch (e) {
+            return false
+        }
+    },
+
+    async finishLine( { dispatch }, {username, progress, datecompleted, pagescompleted }) {
+        try {
+            const route = '/api/accounts/' + username
+            const res = await this.$axios.put(route, {
+                progress,
+                datecompleted,
+                pagescompleted
+            })
+            if (res.status === 200) {
+                await dispatch('load')
+                return true
+            }
+            else {
+                return false
+            }
+        }
+        catch (e) {
+            return false
+        }
+    },
+
     /**
      * Sends a get request to the accounts API endpoint. It then calls the setUser mutation to match the user object in the response.
      * If the user is not logged in, this should return a null value.

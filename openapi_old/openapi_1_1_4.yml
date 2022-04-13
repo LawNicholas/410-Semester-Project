@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Web Maze API
-  version: 1.1.2
+  version: 1.1.4
 paths:
   /accounts:
     x-controller: accounts
@@ -117,13 +117,9 @@ paths:
                   type: string
                 pagescompleted:
                   type: integer
-                fastesttimedd:
-                  type: integer
-                fastesttimehh:
-                  type: integer
-                fastesttimemm:
-                  type: integer
-                fastesttimess:
+                fastesttime:
+                  type: string
+                leaderboard:
                   type: integer
             example:
               email: example@email.com
@@ -327,8 +323,8 @@ components:
         - username
         - email
         - progress
-        - datestarted
-        - pagescompleted
+        - dateStarted
+        - pagesCompleted
         - checkpoints
         - tools
       properties:
@@ -339,25 +335,21 @@ components:
           format: email
         progress:
           type: integer
-        datestarted:
+        dateStarted:
           type: string
           format: date-time
-        datecompleted:
+        dateCompleted:
           type: string
           format: date-time
-        pagescompleted:
+        pagesCompleted:
           type: integer
         checkpoints:
           type: array
           items:
             $ref: '#/components/schemas/Checkpoint'
-        fastesttimedd:
-          type: integer
-        fastesttimehh:
-          type: integer
-        fastesttimemm:
-          type: integer
-        fastesttimess:
+        fastestTime:
+          type: string
+        leaderBoard:
           type: integer
         tools:
           type: array
@@ -388,14 +380,17 @@ components:
       properties:
         username:
           type: string
-        days:
-          type: integer
-        hours:
-          type: integer
-        minutes:
-          type: integer
-        seconds:
-          type: integer
+        dateStarted:
+          type: string
+          format: date-time
+        checkpoints:
+          type: array
+          items:
+            type: string
+            format: date-time
+        dateCompleted:
+          type: string
+          format: date-time
         leaderboard:
           type: integer
     Chat:
