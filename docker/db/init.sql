@@ -78,10 +78,9 @@ FROM accounts WHERE datecompleted IS NOT NULL ORDER BY days, hours, minutes, sec
 
 -- Everything after this line is for testing and should be removed/modified before used in production.
 INSERT INTO tools (toolname, mouseover, toolid) VALUES
-('Tool01', 'This is tool 1', 1),
-('Tool02', 'This is tool 2', 2),
-('Tool03', 'This is tool 3', 3),
-('Tool04', 'This is tool 4', 4);
+('Scanner', 'Uncovers hidden messages on the page.', 1),
+('Decrypter', 'Decrypts Caesar ciphers.', 2),
+('Advanced Scanner', 'Uncovers more hidden elements than the regular scanner.', 3);
 
 INSERT INTO accounts (userid, username, email, password, progress,
 datestarted, datecompleted, pagescompleted, fastesttime_dd, fastesttime_hh, fastesttime_mm, fastesttime_ss) VALUES
@@ -108,8 +107,7 @@ INSERT INTO account_toolids (toolid, userid) VALUES
 (2, '574d2eff-3ae4-42e2-8654-81de18f1fd77'),
 (1, '72cf8e77-bcca-4c86-9676-bef384edd54c'),
 (2, '72cf8e77-bcca-4c86-9676-bef384edd54c'),
-(3, '72cf8e77-bcca-4c86-9676-bef384edd54c'),
-(4, '72cf8e77-bcca-4c86-9676-bef384edd54c');
+(3, '72cf8e77-bcca-4c86-9676-bef384edd54c');
 
 INSERT INTO account_checkpoints (checkpoint, userid) VALUES
 ('2022-03-29 00:00:00', '574d2eff-3ae4-42e2-8654-81de18f1fd77'),

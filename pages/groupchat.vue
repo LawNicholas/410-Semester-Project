@@ -37,7 +37,7 @@
 <script>
 export default {
     name: 'GroupchatPage',
-    middleware: ['authCheck'],
+    middleware: ['finishCheck', 'groupchatLoad'],
     data () {
         const chats = this.$store.state.groupchat.chat
         return chats === null ? {

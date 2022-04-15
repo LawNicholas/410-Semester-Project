@@ -116,15 +116,23 @@ exports.updateAccount = async function (client, userid, data) {
                 const date1 = new Date(rows[0].datestarted)
                 const date2 = new Date(datecompleted)
                 const diffTime = Math.abs(date2 - date1)
+
+                console.log(date1)
+                console.log(date2)
+                console.log(diffTime)
     
                 if (Math.ceil(diffTime / 1000) < fastesttime) {
-                    values.push(Math.floor(diffTime / (1000 * 60 * 60 * 24)))
+                    let days = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+                    values.push(days)
                     sets.push('fastesttime_dd=$' + values.length)
-                    values.push(Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)))
+                    let hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+                    values.push(hours)
                     sets.push('fastesttime_hh=$' + values.length)
-                    values.push(Math.floor(((diffTime % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) / (1000 * 60)))
+                    let minutes = Math.floor(((diffTime % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) / (1000 * 60))
+                    values.push(minutes)
                     sets.push('fastesttime_mm=$' + values.length)
-                    values.push(Math.floor((((diffTime % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) / (1000 * 60)) / (1000)))
+                    let seconds = Math.floor((((diffTime % (1000 * 60 * 60 * 24)) % (1000 * 60 * 60)) % (1000 * 60)) / (1000))
+                    values.push(seconds)
                     sets.push('fastesttime_ss=$' + values.length)
                 }
                 

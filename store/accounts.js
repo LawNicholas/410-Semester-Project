@@ -122,6 +122,11 @@ export const actions = {
             let endpoint = 'api/accounts/'
             const res = await this.$axios.get(endpoint)
             if (res.status === 200) {
+                let tools = res.data.tools
+                for (let i = 0; i < tools.length; i++) {
+                    let toolname = 'Tool' + (i + 1)
+                    localStorage.setItem(toolname, tools[i])
+                }
                 commit('setUser', res.data)
             }
         } catch (e) {
@@ -156,6 +161,7 @@ export const actions = {
      * null. Otherwise, nothing is changed.
      */
     async logout ({ commit }) {
+        localStorage.clear()
         const res = await this.$axios.put('/api/authentication/logout')
         if (res.status === 200) {
             commit('setUser', null)

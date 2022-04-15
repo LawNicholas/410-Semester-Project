@@ -9,7 +9,7 @@
 <script>
 export default {
     name: 'LeaderboardPage',
-    middleware: ['authCheck'],
+    middleware: ['leaderboardLoad'],
     data () {
         const list = this.$store.state.leaderboard.leader_list
         return list === null ? {

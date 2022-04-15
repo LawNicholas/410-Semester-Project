@@ -1,17 +1,8 @@
 <template>
     <div>
-        <v-container
-            max-width="250"
-        >
-            <v-form>
-                <v-text-field
-                    v-model="input"
-                ></v-text-field>
-            </v-form>
-        </v-container>
-        <div class="center">
-            <v-btn color="primary" @click='checkInput()'>Click</v-btn>
-        </div>
+        <h1>To Continue, Please Login</h1>
+        <v-btn color="primary" to='/login' nuxt>Login</v-btn>
+        <v-btn color="primary" to='/createaccount' nuxt>Create Account</v-btn>
     </div>
 </template>
 
@@ -26,7 +17,6 @@
         methods: {
             async checkInput() {
                 if (this.input == '1357'){
-                    console.log('hit')
                     const finished= new Date().toUTCString()
                     const user = await this.$store.state.accounts.user
                     let success = await this.$store.dispatch('accounts/finishLine', {
@@ -45,7 +35,7 @@
 </script>
 
 <style scoped>
-  .container > div {
+  .container {
     max-width: 150px;
     margin: 0 auto;
   }
